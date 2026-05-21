@@ -21,3 +21,6 @@ include("eks.jl")
 
 export ESMDA, ensemble_kalman_analysis
 include("es-mda.jl")
+
+export ABCSMC
+include("abc_smc.jl")

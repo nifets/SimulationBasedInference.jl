@@ -23,7 +23,7 @@ function obscov(likelihoods::SimulatorLikelihood{<:Union{IsoNormal,DiagNormal}}.
         # choose median of prior as standard deviation
         return diag(cov(lik, first(median(lik.prior))))
     end
-    # concatenate all covariance matrices 
+    # concatenate all covariance matrices
     return Diagonal(reduce(vcat, cov_diags))
 end
 
@@ -40,7 +40,7 @@ end
 
 """
     get_transformed_ensemble(sol::EnsembleInferenceSolution, iter::Int=length(sol.storage))
-    
+
 Fetches the transformed ensemble from the given solution object. For iterative algorithms, the
 optinal argument `iter` may be provided, which then retrieves the ensemble at the given iteration.
 """
@@ -75,6 +75,30 @@ function enscat(acc::DimArray, x::DimArray)
     x = DimArray(reshape(x.data, size(x)..., 1), (x_dims..., Dim{:ens}(N+1:N+1)))
     return cat(acc, x, dims=:ens)
 end
+
+ensindex(x::AbstractMatrix, idxs) = x[:, idxs]
+ensindex(x::DimArray, idxs) = hasdim(x, :ens) ? x[ens=idxs] : x[:, idxs]
+ensindex(x::NamedTuple, idxs) = (; map(k -> k => ensindex(x[k], idxs), keys(x))...)
+
+mutable struct EnsembleAccumulator
+    pred
+    observables
+    EnsembleAccumulator() = new(nothing, nothing)
+end
+
+function push_accepted!(acc::EnsembleAccumulator, out, idxs::AbstractVector{Int})
+    isempty(idxs) && return acc
+    p = out.pred[:, idxs]
+    o = ensindex(out.observables, idxs)
+    if acc.pred === nothing
+        acc.pred, acc.observables = p, o
+    else
+        acc.pred        = hcat(acc.pred, p)
+        acc.observables = ntreduce(enscat, [acc.observables, o])
+    end
+    return acc
+end
+
 
 function sample_ensemble_predictive(
     sol::EnsembleInferenceSolution,
