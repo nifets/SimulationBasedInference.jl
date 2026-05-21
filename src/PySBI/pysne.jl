@@ -14,10 +14,10 @@ Base.@kwdef struct PySNE <: SBI.SimulatorInferenceAlgorithm
     show_progress_bars=true
 end
 
-SNPE_A(kwargs...) = PySNE(; algtype=sbi.inference.SNPE_A, kwargs...)
-SNPE_B(kwargs...) = PySNE(; algtype=sbi.inference.SNPE_B, kwargs...)
-SNPE_C(kwargs...) = PySNE(; algtype=sbi.inference.SNPE_C, kwargs...)
-SNLE_A(kwargs...) = PySNE(; algtype=sbi.inference.SNLE_A, kwargs...)
+SNPE_A(; kwargs...) = PySNE(; algtype=sbi.inference.SNPE_A, kwargs...)
+SNPE_B(; kwargs...) = PySNE(; algtype=sbi.inference.SNPE_B, kwargs...)
+SNPE_C(; kwargs...) = PySNE(; algtype=sbi.inference.SNPE_C, kwargs...)
+SNLE_A(; kwargs...) = PySNE(; algtype=sbi.inference.SNLE_A, kwargs...)
 
 function build(alg::PySNE, prior)
     return alg.algtype(

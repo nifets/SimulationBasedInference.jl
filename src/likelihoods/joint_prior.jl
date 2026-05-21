@@ -40,8 +40,11 @@ end
 function Bijectors.bijector(jp::JointPrior)
     b_m = bijector(jp.model)
     b_liks = map(d -> bijector(d), jp.lik)
-    b_combined = foldl(bstack, tuple(b_m, b_liks...))
-    return b_combined
+    bjs = collect(Any, (b_m, b_liks...))
+    lengths = [b isa Bijectors.Stacked ? b.length_in : 1 for b in bjs]
+    offsets = cumsum([0; lengths[1:end-1]])
+    ranges_in = [(offsets[i]+1):(offsets[i]+lengths[i]) for i in eachindex(bjs)]
+    return Bijectors.Stacked(bjs, ranges_in)
 end
 
 @generated function logprob(jp::JointPrior{<:Any,lnames}, θ::ComponentVector) where {lnames}
@@ -51,7 +54,7 @@ end
     quote
         lp_model = logprob(jp.model, θ.model)
         if length(lnames) > 0
-            lp_lik = sum($(sum_args...))
+            lp_lik = +($(sum_args...))
             return lp_model + lp_lik
         else
             return lp_model
