@@ -64,6 +64,12 @@ function get_observables(sol::EnsembleInferenceSolution, iter::Int=length(sol.st
     return out
 end
 
+function get_weights(sol::EnsembleInferenceSolution, iter::Int = length(sol.storage))
+    md = getmetadata(sol.storage, iter)
+    hasproperty(md, :weights) ? StatsBase.Weights(md.weights ./ sum(md.weights)) :
+        StatsBase.uweights(size(get_ensemble(sol, iter), 2))   # no weights -> uniform
+end
+
 enscat(x::AbstractVecOrMat, y::AbstractVector) = hcat(x, y)
 function enscat(acc::DimArray, x::DimArray)
     if !hasdim(acc, :ens)

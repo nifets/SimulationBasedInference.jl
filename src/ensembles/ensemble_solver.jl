@@ -100,9 +100,9 @@ on the current ensemble state and stores the results in `sol.storage`.
 function finalize!(solver::EnsembleSolver)
     out = ensemble_forward(solver)
     return if isiterative(solver.alg)
-        store!(solver.sol.storage, get_ensemble(solver.state), out.observables, iter=solver.state.iter + 1)
+        store!(solver.sol.storage, get_ensemble(solver.state), out.observables, iter=solver.state.iter + 1, step_metadata(solver.state)...)
     else
-        store!(solver.sol.storage, get_ensemble(solver.state), out.observables)
+        store!(solver.sol.storage, get_ensemble(solver.state), out.observables, step_metadata(solver.state)...)
     end
 end
 

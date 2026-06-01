@@ -40,8 +40,6 @@ get_weights(state::EnISState) = state.weights
 
 step_metadata(state::EnISState) = (; weights = state.weights, Neff = state.Neff)
 
-get_weights(sol::SimulatorInferenceSolution{EnIS}) = get_weights(sol.result)
-
 function initialstate(
         ::EnIS,
         ::AbstractSimulatorPrior,
