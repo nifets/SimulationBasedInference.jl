@@ -57,6 +57,13 @@ for each ensemble algorithm state type.
 hasconverged(alg::EnsembleInferenceAlgorithm, state::EnsembleState) = error("hasconverged not implemented for alg $(typeof(alg))")
 
 """
+    step_metadata(alg::EnsembleInferenceAlgorithm, state::EnsembleState)
+
+Metadata associated with current state.
+"""
+step_metadata(::EnsembleState) = (;)
+
+"""
     initialstate(
         alg::EnsembleInferenceAlgorithm,
         ens::AbstractMatrix,
@@ -177,7 +184,7 @@ function step!(solver::EnsembleSolver)
     # set result
     sol.result = state
     # store observables
-    store!(sol.storage, get_ensemble(state), out.observables, iter=state.iter)
+    store!(sol.storage, get_ensemble(state), out.observables, iter=state.iter, step_metadata(state)...)
     # iteration callback
     callback_retval = solver.itercallback(state)
     # check convergence

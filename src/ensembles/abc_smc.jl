@@ -56,6 +56,8 @@ get_obs_cov(state::ABCSMCState) = state.obs_cov
 
 hasconverged(alg::ABCSMC, state::ABCSMCState) = state.iter >= alg.maxiters
 
+step_metadata(state::ABCSMCState) = (; weights = state.weights, ε = state.ε)
+
 function initialstate(alg::ABCSMC,
                       prior::AbstractSimulatorPrior,
                       ens::AbstractMatrix,
