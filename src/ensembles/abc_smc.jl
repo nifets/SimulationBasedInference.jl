@@ -148,6 +148,7 @@ function ensemblestep!(solver::EnsembleSolver{<:ABCSMC})
 
     dists = accepted_d[1:n_accepted]
     state.ens = reduce(hcat, accepted_θ[1:n_accepted])
+    state.distances = dists
     state.weights = new_weights(state.ens, prev_ens, weights, kernel, state.prior)
     state.ε = threshold(alg, dists)
 
