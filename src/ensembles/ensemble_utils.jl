@@ -66,13 +66,14 @@ end
 
 enscat(x::AbstractVecOrMat, y::AbstractVector) = hcat(x, y)
 function enscat(acc::DimArray, x::DimArray)
-    acc_dims = Tuple(dims(acc))
-    x_dims = Tuple(dims(x))
     if !hasdim(acc, :ens)
-        acc = DimArray(reshape(acc.data, size(acc)..., 1), (acc_dims..., Dim{:ens}(1:1)))
+        acc_dims = Tuple(dims(acc))
+        acc = DimArray(reshape(parent(acc), size(acc)..., 1), (acc_dims..., Dim{:ens}()))
     end
-    N = size(acc, :ens)
-    x = DimArray(reshape(x.data, size(x)..., 1), (x_dims..., Dim{:ens}(N+1:N+1)))
+    if !hasdim(x, :ens)
+        x_dims = Tuple(dims(x))
+        x = DimArray(reshape(parent(x), size(x)..., 1), (x_dims..., Dim{:ens}()))
+    end
     return cat(acc, x, dims=:ens)
 end
 

@@ -135,7 +135,7 @@ function ensemblestep!(solver::EnsembleSolver{<:ABCSMC})
         end
         push_accepted!(acc, out, batch_accepted)
         n_proposals += b
-        solver.verbose && @info "ABC-SMC round $(state.iter)" accepted=n_accepted proposals=n_proposals ε=state.ε
+        solver.verbose && @info "rejection sampling" accepted=n_accepted proposals=n_proposals
     end
 
     n_accepted == 0 && error("ABC-SMC: no particles accepted in round $(state.iter) " *
@@ -153,7 +153,7 @@ function ensemblestep!(solver::EnsembleSolver{<:ABCSMC})
 
     push!(solver.logprior, [logpdf(state.prior, view(state.ens, :, i)) for i in 1:n_accepted])
 
-    solver.verbose && @info "ABC-SMC round $(state.iter) done" ε=state.ε min_d=minimum(dists) med_d=median(dists)
+    solver.verbose && @info "ABC-SMC round $(state.iter) done" ε=state.ε min_d=minimum(dists)
 
     return (; pred=acc.pred, observables=acc.observables)
 end
