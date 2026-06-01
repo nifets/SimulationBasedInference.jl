@@ -1,3 +1,5 @@
+using JLD2: jldopen
+
 """
     SimulationData{inputType, outputType}
 
@@ -12,9 +14,20 @@ Stores the input/output pair x/y in the given forward map storage container.
 """
 function store! end
 
-Base.length(storage::SimulationData) = length(storage.inputs)
+function getinputs end
+function getoutputs end
+function getmetadata end
+
+getinputs(s::SimulationData, i) = getinputs(s)[i]
+getoutputs(s::SimulationData, i) = getoutputs(s)[i]
+getmetadata(s::SimulationData, i) = getmetadata(s)[i]
+
+Base.length(storage::SimulationData) = length(getinputs(storage))
 Base.lastindex(storage::SimulationData) = length(storage)
 Base.firstindex(storage::SimulationData) = 1
+Base.getindex(s::SimulationData, i) = (getinputs(s, i), getoutputs(s, i), getmetadata(s, i))
+Base.iterate(s::SimulationData, state=1) =
+    state <= length(s) ? (s[state], state + 1) : nothing
 
 """
     SimulationArrayStorage <: SimulationData
@@ -34,19 +47,9 @@ SimulationArrayStorage(;
     metadata_type::Type = Any
 ) = SimulationArrayStorage(input_type[], output_type[], metadata_type[])
 
-Base.getindex(storage::SimulationArrayStorage, i) = (storage.inputs[i], storage.outputs[i], storage.metadata[i])
-
-Base.iterate(storage::SimulationArrayStorage) = (storage[1], 1)
-Base.iterate(storage::SimulationArrayStorage, state) = state <= length(storage) ? (storage[state], state+1) : nothing
-
 getinputs(storage::SimulationArrayStorage) = storage.inputs
-getinputs(storage::SimulationArrayStorage, i) = storage.inputs[i]
-
 getoutputs(storage::SimulationArrayStorage) = storage.outputs
-getoutputs(storage::SimulationArrayStorage, i) = storage.outputs[i]
-
 getmetadata(storage::SimulationArrayStorage) = storage.metadata
-getmetadata(storage::SimulationArrayStorage, i) = storage.metadata[i]
 
 function store!(storage::SimulationArrayStorage, x, y; attr...)
     push!(storage.inputs, x)
@@ -59,3 +62,35 @@ function clear!(storage::SimulationArrayStorage)
     resize!(storage.outputs, 0)
     resize!(storage.metadata, 0)
 end
+
+"""
+    SimulationFileStorage <: SimulationData
+
+Implementation of `SimulationData` that stores all results to file, using JLD2.
+"""
+mutable struct SimulationFileStorage <: SimulationData{Any, Any}
+    path::String
+    count::Int
+end
+
+function SimulationFileStorage(path)
+    n = isfile(path) ? jldopen(f -> haskey(f, "input") ? length(keys(f["input"])) : 0, path, "r") : 0
+    SimulationFileStorage(String(path), n)
+end
+
+Base.length(s::SimulationFileStorage) = s.count
+
+function store!(s::SimulationFileStorage, x, y; attr...)
+    i = s.count + 1
+    jldopen(s.path, "a+") do f
+        f["input/$i"]  = x
+        f["output/$i"] = y
+        f["meta/$i"]   = (; attr...)
+    end
+    s.count = i
+    return s
+end
+
+getinputs(s::SimulationFileStorage)   = jldopen(f -> [f["input/$i"]  for i in 1:s.count], s.path, "r")
+getoutputs(s::SimulationFileStorage)  = jldopen(f -> [f["output/$i"] for i in 1:s.count], s.path, "r")
+getmetadata(s::SimulationFileStorage) = jldopen(f -> [f["meta/$i"]   for i in 1:s.count], s.path, "r")

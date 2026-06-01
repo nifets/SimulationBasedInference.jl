@@ -1,7 +1,7 @@
 name = "SimulationBasedInference"
 uuid = "78927d98-f421-490e-8789-96b006983a5c"
-authors = ["Brian Groenke <brian.groenke@awi.de>"]
 version = "0.2.3"
+authors = ["Brian Groenke <brian.groenke@awi.de>"]
 
 [deps]
 AbstractMCMC = "80f14c24-f653-4e6a-9b94-39d6b0f70001"
@@ -15,6 +15,7 @@ Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EnsembleKalmanProcesses = "aa8a2aa5-91d8-4396-bcef-d4f2ec43552d"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LogDensityProblems = "6fdf6af0-433a-55f7-b3ed-c6c6e0b8df7c"
 LogDensityProblemsAD = "996a588d-648d-4e1f-a8f0-a84b347e47b1"
@@ -58,6 +59,7 @@ Distributions = "0.25"
 DynamicHMC = "3"
 EnsembleKalmanProcesses = "2"
 ForwardDiff = "1"
+JLD2 = "0.6.4"
 LogDensityProblems = "2"
 LogDensityProblemsAD = "1"
 MCMCChains = "6, 7"
