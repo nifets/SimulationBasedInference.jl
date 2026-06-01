@@ -74,6 +74,7 @@ mutable struct SimulationFileStorage <: SimulationData{Any, Any}
 end
 
 function SimulationFileStorage(path)
+    mkpath(dirname(abspath(path)))
     n = isfile(path) ? jldopen(f -> haskey(f, "input") ? length(keys(f["input"])) : 0, path, "r") : 0
     SimulationFileStorage(String(path), n)
 end
