@@ -26,6 +26,10 @@ function obscov(likelihoods::SimulatorLikelihood{<:Union{IsoNormal,DiagNormal}}.
     # concatenate all covariance matrices
     return Diagonal(reduce(vcat, cov_diags))
 end
+# fixed, known covariances — read directly, no prior median
+function obscov(likelihoods::SimulatorLikelihood{FixedCov}...)
+    return Diagonal(reduce(vcat, map(lik -> diag(lik.prior), likelihoods)))
+end
 
 """
     get_ensemble(sol::EnsembleInferenceSolution, iter::Int=length(sol.storage))

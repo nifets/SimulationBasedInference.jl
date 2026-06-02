@@ -52,3 +52,31 @@ end
 Statistics.cov(lik::SimulatorLikelihood{IsoNormal}, σ::Number) = Diagonal(σ^2*ones(prod(size(lik.data))))
 Statistics.cov(lik::SimulatorLikelihood{IsoNormal}, σ::AbstractVector) = cov(lik, σ[1])
 Statistics.cov(lik::SimulatorLikelihood{DiagNormal}, σ::AbstractVector) = Diagonal(σ.^2)
+
+"""
+    FixedCov
+
+Marker distribution type for [`FixedGaussianLikelihood`](@ref): a multivariate
+Gaussian whose covariance is known and fixed rather than parameterised by a prior.
+"""
+struct FixedCov end
+
+"""
+    FixedGaussianLikelihood(obs, data, cov, name=nameof(obs))
+
+A multivariate Gaussian likelihood `N(G(θ), Σ)` with a **known, fixed** covariance
+`Σ = cov`. Unlike the other Gaussian likelihoods it has no noise parameters: `Σ`
+is treated as fixed data, so it contributes nothing to the joint prior, and ensemble
+methods read it directly as the observation covariance. Intended for summary-statistic
+/ synthetic-likelihood inference where `Σ` is estimated once (e.g. by bootstrap) and
+then held fixed. The covariance is stored in the `prior` field but hidden from the
+joint prior via `getprior`.
+"""
+FixedGaussianLikelihood(obs, data, cov, name=nameof(obs)) =
+    SimulatorLikelihood(FixedCov, obs, data, cov, name)
+
+# No noise parameters — keep the stored covariance out of the joint prior.
+getprior(::SimulatorLikelihood{FixedCov}) = nothing
+
+predictive_distribution(lik::SimulatorLikelihood{FixedCov}) =
+    MvNormal(vec(getvalue(lik.obs)), lik.prior)
