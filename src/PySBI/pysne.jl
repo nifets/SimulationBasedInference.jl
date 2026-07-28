@@ -50,6 +50,7 @@ mutable struct PySBISolver{algType,samplingType<:PySBISampling}
     train_kwargs::NamedTuple
     sampling::samplingType
     data::Union{Missing,SimulationData}
+    prior::Py
     proposal::Py
     simulator::Py
     inference::Py
@@ -102,7 +103,8 @@ function init(
         train_kwargs,
         sampling,
         simdata,
-        prepared_prior,
+        prepared_prior,   # prior (used as proposal for rejection sampling)
+        prepared_prior,   # proposal (overwritten with the posterior each round)
         prepared_sim,
         inference_alg,
         missing,
@@ -128,7 +130,7 @@ function step!(solver::PySBISolver)
     # step 3: build posterior
     @info "Building posterior"
     x_obs = reduce(vcat, map(lik -> vec(lik.data), solver.prob.likelihoods))
-    posterior = _build_posterior(solver.sampling, solver.inference, solver.estimator)
+    posterior = _build_posterior(solver.sampling, solver.inference, solver.estimator, solver.prior)
     posterior.set_default_x(Py(x_obs).to_numpy())
     solver.proposal = posterior
     solver.iter += 1
@@ -169,18 +171,19 @@ function default_sampling(algtype)
     end
 end
 
-function _build_posterior(sampling::DirectSampling, inference::Py, estimator::Py)
+function _build_posterior(sampling::DirectSampling, inference::Py, estimator::Py, prior::Py)
     direct_sampling_parameters = sampling.parameters
     return inference.build_posterior(estimator; sample_with="direct", direct_sampling_parameters)
 end
 
-function _build_posterior(sampling::RejectionSampling, inference::Py, estimator::Py)
+function _build_posterior(sampling::RejectionSampling, inference::Py, estimator::Py, prior::Py)
+    # sbi ≥0.23 requires a prior for rejection sampling (used as the proposal)
     rejection_sampling_parameters = sampling.parameters
-    return inference.build_posterior(estimator; sample_with="rejection", rejection_sampling_parameters)
+    return inference.build_posterior(estimator; sample_with="rejection", prior, rejection_sampling_parameters)
 end
 
-function _build_posterior(sampling::MCMCSampling, inference::Py, estimator::Py)
+function _build_posterior(sampling::MCMCSampling, inference::Py, estimator::Py, prior::Py)
     mcmc_method = sampling.method
     mcmc_parameters = sampling.parameters
-    return inference.build_posterior(estimator; sample_with="mcmc", mcmc_method, mcmc_parameters)
+    return inference.build_posterior(estimator; sample_with="mcmc", prior, mcmc_method, mcmc_parameters)
 end

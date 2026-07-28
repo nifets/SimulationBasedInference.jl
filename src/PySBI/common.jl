@@ -63,10 +63,10 @@ function StatsBase.sample(rng::Random.AbstractRNG, sp::SurrogatePosterior, n::In
     seed = rand(rng, UInt32)
     torch.manual_seed(seed) # set global seed; not ideal since it changes global state...
     if isnothing(obs)
-        raw_samples = pyconvert(Matrix, sp.posterior.sample((n,)))
+        raw_samples = pyconvert(Matrix, sp.posterior.sample((n,)).detach())
     else
         x = Py(obs).to_numpy()
-        raw_samples = pyconvert(Matrix, sp.posterior.sample((n,), x=x))
+        raw_samples = pyconvert(Matrix, sp.posterior.sample((n,), x=x).detach())
     end
     return reduce(hcat, map(transform, eachrow(raw_samples)))
 end
